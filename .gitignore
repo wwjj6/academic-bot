@@ -216,3 +216,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ============================================================
+# حماية ملفات البوت الحساسة — لا تحذف هذا القسم أبداً!
+# Secrets & tokens (bot-specific — DO NOT REMOVE)
+# ============================================================
+API_Token
+Bot_information.md
+config.json
+
+# قاعدة البيانات (بيانات الطلاب والنتائج)
+*.db
+*.sqlite3
+
+# نسخة محلية من ملفات الرفع
+github__Ubploaded_files/
