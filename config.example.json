@@ -1,0 +1,12 @@
+{
+    "bot_token": "PUT_YOUR_TELEGRAM_BOT_TOKEN_HERE",
+    "bot_name": "المسابقات الأكاديمية - كلية الطب | جامعة حجة",
+    "admin_ids": [123456789],
+    "admin_usernames": ["username1", "username2"],
+    "database_path": "academic_bot.db",
+    "timezone": "Asia/Aden",
+    "min_questions": 5,
+    "max_questions": 50,
+    "default_question_seconds": 60,
+    "top_n_leaderboard": 10
+}
