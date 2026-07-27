@@ -1,0 +1,18 @@
+{
+    "bot_token": "8837774274:AAEJbEuVfAOLYlhajUHjwUW75T-ga6gzaIs",
+    "bot_name": "المنصة الأكاديمية",
+    "admin_ids": [
+        8837774274
+    ],
+    "admin_usernames": [
+        "Hiam_Adnan",
+        "ElianMuse",
+        "HlIWIl"
+    ],
+    "database_path": "academic_bot.db",
+    "timezone": "Asia/Aden",
+    "min_questions": 5,
+    "max_questions": 50,
+    "default_question_seconds": 60,
+    "top_n_leaderboard": 10
+}
