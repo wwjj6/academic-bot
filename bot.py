@@ -97,18 +97,15 @@ def main():
     application.add_handler(MessageHandler(filters.Text([BTN_LEADERBOARD]),
                                            common.show_general_leaderboard))
 
-    logger.info("🚀 بوت المسابقات الأكاديمية يعمل الآن...")
+   logger.info("🚀 بوت المسابقات الأكاديمية يعمل الآن...")
 
-    # ========== إصلاح مشكلة Event Loop ==========
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        # لا يوجد حلقة تشغيل حالية → ننشئ واحدة جديدة
-        asyncio.run(application.run_polling(drop_pending_updates=True))
-    else:
-        # يوجد حلقة تشغيل → نستخدمها مباشرة
-        application.run_polling(drop_pending_updates=True)
-
-
-if __name__ == "__main__":
-    main()
+# ===== الحل النهائي لتشغيل البوت على Render =====
+import asyncio
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+try:
+    loop.run_until_complete(application.run_polling(drop_pending_updates=True))
+except KeyboardInterrupt:
+    pass
+finally:
+    loop.close()
