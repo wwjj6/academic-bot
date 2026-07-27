@@ -61,16 +61,16 @@ def main():
         .build()
     )
 
-    # ---------- المحادثات (يجب تسجيلها أولاً لالتقاط أزرار الدخول) ----------
-    application.add_handler(common.get_registration_handler())          # تسجيل الطلاب
-    application.add_handler(professor.get_competition_creation_handler())  # إنشاء مسابقة مدرس
-    application.add_handler(professor.get_notify_handler())             # إشعارات المدرس
-    application.add_handler(committee.get_general_comp_handler())       # مسابقة عامة
-    application.add_handler(committee.get_assign_handler())             # تعيين المقررات
-    for h in admin.get_conversation_handlers():                         # محادثات المشرف
+    # ---------- المحادثات ----------
+    application.add_handler(common.get_registration_handler())
+    application.add_handler(professor.get_competition_creation_handler())
+    application.add_handler(professor.get_notify_handler())
+    application.add_handler(committee.get_general_comp_handler())
+    application.add_handler(committee.get_assign_handler())
+    for h in admin.get_conversation_handlers():
         application.add_handler(h)
 
-    # ---------------------------- الأزرار المفردة ----------------------------
+    # ---------- الأزرار المفردة ----------
     for h in professor.get_callback_handlers():
         application.add_handler(h)
     for h in committee.get_callback_handlers():
@@ -80,7 +80,7 @@ def main():
     for h in student.get_callback_handlers():
         application.add_handler(h)
 
-    # ------------------------------- المشتركة -------------------------------
+    # ---------- المشتركة ----------
     application.add_handler(CallbackQueryHandler(common.show_main_menu,
                                                  pattern=r"^main_menu$"))
     application.add_handler(CallbackQueryHandler(common.show_general_leaderboard,
@@ -89,7 +89,7 @@ def main():
     application.add_handler(CommandHandler("help", common.help_command))
     application.add_handler(CommandHandler("cancel", common.cancel))
 
-    # أزرار لوحة التحكم الدائمة (أيقونة الأزرار بجانب حقل الكتابة)
+    # أزرار لوحة التحكم الدائمة
     application.add_handler(MessageHandler(filters.Text([BTN_MAIN_MENU]),
                                            common.show_main_menu))
     application.add_handler(MessageHandler(filters.Text([BTN_HELP]),
@@ -99,13 +99,17 @@ def main():
 
     logger.info("🚀 بوت المسابقات الأكاديمية يعمل الآن...")
 
-# ===== الحل النهائي لتشغيل البوت على Render =====
-import asyncio
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-try:
-    loop.run_until_complete(application.run_polling(drop_pending_updates=True))
-except KeyboardInterrupt:
-    pass
-finally:
-    loop.close()
+    # ===== الحل النهائي لتشغيل البوت على Render (داخل def main) =====
+    import asyncio
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(application.run_polling(drop_pending_updates=True))
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.close()
+
+
+if __name__ == "__main__":
+    main()
