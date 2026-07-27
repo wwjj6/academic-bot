@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}نتائج المسابقة{% endblock %}
+{% block content %}
+<h1>📊 نتائج المسابقة</h1>
+<p class="subtitle">{{ comp.title if comp else '—' }}</p>
+<div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <a href="{{ url_for('competitions') }}" class="btn btn-gray btn-sm">→ العودة للمسابقات</a>
+    {% if comp and results %}
+    <a href="{{ url_for('competitions_results_export', cid=comp.competition_id) }}" class="btn btn-green btn-sm">⬇️ تصدير Excel/CSV</a>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-top:16px;">
+    <h2>الترتيب ({{ results|length }} مشارك)</h2>
+    {% if results %}
+    <div class="table-wrap">
+    <table>
+        <thead><tr><th>#</th><th>الاسم</th><th>الرقم الجامعي</th><th>الدرجة</th><th>الزمن (ث)</th></tr></thead>
+        <tbody>
+        {% for r in results %}
+        <tr>
+            <td>
+                {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+            </td>
+            <td><strong>{{ r.full_name }}</strong></td>
+            <td dir="ltr">{{ r.university_id or '—' }}</td>
+            <td>{{ r.score }}/{{ r.total }}</td>
+            <td>{{ r.time_taken }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted">لا توجد نتائج لهذه المسابقة بعد.</p>
+    {% endif %}
+</div>
+{% endblock %}

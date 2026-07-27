@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}الإعداد الأولي — لوحة تحكم البوت{% endblock %}
+{% block auth_content %}
+<div class="auth-card">
+    <h1>🔐 الإعداد الأولي</h1>
+    <p class="subtitle">أنشئ كلمة مرور لحماية لوحة التحكم</p>
+    <form method="post">
+        <div class="form-row">
+            <label>كلمة المرور <span class="hint">(6 أحرف على الأقل)</span></label>
+            <input type="password" name="password" required autofocus>
+        </div>
+        <div class="form-row">
+            <label>تأكيد كلمة المرور</label>
+            <input type="password" name="password2" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">إنشاء كلمة المرور والدخول</button>
+    </form>
+</div>
+{% endblock %}

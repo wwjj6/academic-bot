@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}{{ 'مسابقة جديدة' if mode == 'new' else 'تعديل المسابقة' }}{% endblock %}
+{% block content %}
+<h1>{{ '➕ مسابقة جديدة' if mode == 'new' else '✏️ تعديل المسابقة' }}</h1>
+<a href="{{ url_for('competitions') }}" class="btn btn-gray btn-sm">→ العودة للمسابقات</a>
+
+<div class="alert alert-info" style="margin-top:14px;">
+    ℹ️ بعد إنشاء المسابقة وإضافة أسئلتها، اضبط حالتها إلى «معتمدة» أو «نشطة»،
+    ثم أعد تشغيل البوت من لوحة التحكم لتُجدول وتُرسل للطلاب في موعدها.
+</div>
+
+<!-- بيانات المسابقة -->
+<form method="post"
+      action="{{ url_for('competitions_new') if mode == 'new' else url_for('competitions_edit', cid=comp.competition_id) }}">
+<div class="card">
+    <h2>🏷 بيانات المسابقة</h2>
+    <div class="form-row">
+        <label>عنوان المسابقة *</label>
+        <input type="text" name="title" required value="{{ comp.title if comp else '' }}">
+    </div>
+    <div class="form-grid">
+        <div class="form-row">
+            <label>المقرر</label>
+            <select name="subject_id">
+                <option value="">— عامة (كل الطلاب) —</option>
+                {% for s in subjects %}
+                <option value="{{ s.subject_id }}"
+                    {{ 'selected' if comp and comp.subject_id == s.subject_id }}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-row">
+            <label>النوع</label>
+            <select name="comp_type">
+                {% for key, label in type_labels.items() %}
+                <option value="{{ key }}" {{ 'selected' if comp and comp.comp_type == key }}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-row">
+            <label>عدد الأسئلة</label>
+            <input type="number" name="num_questions" min="1" value="{{ comp.num_questions if comp else 5 }}">
+        </div>
+        <div class="form-row">
+            <label>مدة كل سؤال (ثانية)</label>
+            <input type="number" name="question_seconds" min="5" value="{{ comp.question_seconds if comp else 60 }}">
+        </div>
+        <div class="form-row">
+            <label>وقت البدء <span class="hint">YYYY-MM-DD HH:MM</span></label>
+            <input type="text" name="start_time" dir="ltr" placeholder="2026-07-20 18:00"
+                   value="{{ comp.start_time if comp else '' }}">
+        </div>
+        <div class="form-row">
+            <label>وقت الانتهاء</label>
+            <input type="text" name="end_time" dir="ltr" placeholder="2026-07-20 20:00"
+                   value="{{ comp.end_time if comp else '' }}">
+        </div>
+    </div>
+    {% if mode == 'new' %}
+        <input type="hidden" name="status" value="draft">
+        <button type="submit" class="btn btn-primary">إنشاء المسابقة والانتقال للأسئلة</button>
+    {% else %}
+        <button type="submit" class="btn btn-primary">💾 حفظ بيانات المسابقة</button>
+    {% endif %}
+</div>
+</form>
+
+{% if mode == 'edit' %}
+<!-- إدارة الأسئلة -->
+<div class="card">
+    <h2>❓ الأسئلة ({{ questions|length }}/{{ comp.num_questions }})</h2>
+
+    {% for q in questions %}
+    <div class="card" style="background:#fafbfc;">
+        <form method="post" action="{{ url_for('questions_edit', qid=q.question_id) }}">
+            <div class="form-row">
+                <label>السؤال {{ loop.index }}</label>
+                <input type="text" name="text" value="{{ q.text }}" required>
+            </div>
+            <div class="form-grid">
+                {% for opt in ['a','b','c','d'] %}
+                <div class="form-row">
+                    <label>الخيار {{ option_labels[opt] }}
+                        {% if q.correct_option == opt %}<span class="badge badge-green">الصحيح</span>{% endif %}
+                    </label>
+                    <input type="text" name="option_{{ opt }}" value="{{ q['option_' + opt] }}" required>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="form-row">
+                <label>الإجابة الصحيحة</label>
+                <select name="correct_option">
+                    {% for opt in ['a','b','c','d'] %}
+                    <option value="{{ opt }}" {{ 'selected' if q.correct_option == opt }}>{{ option_labels[opt] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="btn btn-green btn-sm">💾 حفظ السؤال</button>
+            </div>
+        </form>
+        <form method="post" action="{{ url_for('questions_delete', qid=q.question_id) }}"
+              onsubmit="return confirm('حذف هذا السؤال؟');" style="margin-top:8px;">
+            <button type="submit" class="btn btn-red btn-sm">🗑 حذف السؤال</button>
+        </form>
+    </div>
+    {% else %}
+    <p class="muted">لا توجد أسئلة بعد. أضف أول سؤال من الأسفل.</p>
+    {% endfor %}
+
+    <h2>➕ إضافة سؤال جديد</h2>
+    <form method="post" action="{{ url_for('questions_add', cid=comp.competition_id) }}">
+        <div class="form-row">
+            <label>نص السؤال *</label>
+            <input type="text" name="text" required placeholder="اكتب السؤال هنا">
+        </div>
+        <div class="form-grid">
+            <div class="form-row"><label>الخيار أ *</label><input type="text" name="option_a" required></div>
+            <div class="form-row"><label>الخيار ب *</label><input type="text" name="option_b" required></div>
+            <div class="form-row"><label>الخيار ج *</label><input type="text" name="option_c" required></div>
+            <div class="form-row"><label>الخيار د *</label><input type="text" name="option_d" required></div>
+        </div>
+        <div class="form-row">
+            <label>الإجابة الصحيحة</label>
+            <select name="correct_option">
+                {% for opt in ['a','b','c','d'] %}
+                <option value="{{ opt }}">{{ option_labels[opt] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">إضافة السؤال</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

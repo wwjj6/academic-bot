@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}لجنة المسابقات{% endblock %}
+{% block content %}
+<h1>🧑‍⚖️ إدارة لجنة المسابقات</h1>
+<p class="subtitle">أعضاء اللجنة يراجعون المسابقات ويعينون مقررات المدرسين</p>
+
+<div class="card">
+    <h2>➕ إضافة عضو لجنة</h2>
+    <form method="post" action="{{ url_for('committee_add') }}">
+        <div class="form-grid">
+            <div class="form-row">
+                <label>معرف تيليجرام الرقمي *
+                    <span class="hint">— من @userinfobot</span>
+                </label>
+                <input type="text" name="user_id" required dir="ltr" placeholder="123456789">
+            </div>
+            <div class="form-row">
+                <label>اسم العضو *</label>
+                <input type="text" name="full_name" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <label>اسم المستخدم <span class="hint">(اختياري)</span></label>
+            <input type="text" name="username" dir="ltr" placeholder="username">
+        </div>
+        <button type="submit" class="btn btn-primary">إضافة العضو</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>أعضاء اللجنة ({{ members|length }})</h2>
+    {% if members %}
+    <div class="table-wrap">
+    <table>
+        <thead><tr><th>الاسم</th><th>المعرف</th><th>اسم المستخدم</th><th>إجراء</th></tr></thead>
+        <tbody>
+        {% for m in members %}
+        <tr>
+            <td><strong>{{ m.full_name }}</strong></td>
+            <td dir="ltr">{{ m.user_id }}</td>
+            <td dir="ltr">{{ '@' + m.username if m.username else '—' }}</td>
+            <td>
+                <form method="post" action="{{ url_for('committee_delete', uid=m.user_id) }}"
+                      onsubmit="return confirm('إزالة «{{ m.full_name }}» من اللجنة؟');">
+                    <button class="btn btn-red btn-sm">🗑 إزالة</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted">لا يوجد أعضاء لجنة بعد.</p>
+    {% endif %}
+</div>
+{% endblock %}

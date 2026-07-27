@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}لوحة التحكم{% endblock %}
+{% block content %}
+<h1>🏠 لوحة التحكم</h1>
+<p class="subtitle">{{ cfg.bot_name }}</p>
+
+{% if not token_ok %}
+<div class="alert alert-warn">
+    ⚠️ توكن البوت غير مضبوط. اذهب إلى <a href="{{ url_for('settings') }}">إعدادات البوت</a> وأدخل التوكن من BotFather.
+</div>
+{% endif %}
+{% if not admins_ok %}
+<div class="alert alert-warn">
+    ⚠️ لم يتم تعيين مشرف عام. أضف معرفك الرقمي في <a href="{{ url_for('settings') }}">إعدادات البوت</a> ← المشرفون.
+</div>
+{% endif %}
+{% if not psutil_ok %}
+<div class="alert alert-info">
+    ℹ️ مكتبة <code>psutil</code> غير مثبتة — أزرار تشغيل/إيقاف البوت معطّلة.
+    ثبّتها بالأمر: <code>pip install psutil</code>
+</div>
+{% endif %}
+
+<!-- الإحصائيات -->
+<div class="stat-grid">
+    <div class="stat"><div class="num">{{ stats.students }}</div><div class="label">🎓 الطلاب</div></div>
+    <div class="stat"><div class="num">{{ stats.professors }}</div><div class="label">👨‍🏫 المدرسون</div></div>
+    <div class="stat"><div class="num">{{ stats.committee }}</div><div class="label">🧑‍⚖️ اللجنة</div></div>
+    <div class="stat"><div class="num">{{ stats.subjects }}</div><div class="label">📚 المقررات</div></div>
+    <div class="stat"><div class="num">{{ stats.competitions }}</div><div class="label">🏆 المسابقات</div></div>
+    <div class="stat"><div class="num">{{ stats.active_competitions }}</div><div class="label">🟢 النشطة</div></div>
+    <div class="stat"><div class="num">{{ stats.results }}</div><div class="label">📝 المشاركات</div></div>
+</div>
+
+<!-- التحكم بالبوت -->
+<div class="card">
+    <h2>🎛 التحكم بتشغيل البوت
+        <span class="muted" style="font-size:.75rem;">🔄 تحديث تلقائي</span>
+    </h2>
+    <p class="muted">
+        الحالة الآن: <span id="botStatusBadge"></span>
+    </p>
+    <div class="bot-controls">
+        <form class="inline-form" method="post" action="{{ url_for('bot_control', action='start') }}">
+            <button class="btn btn-green" id="btnStart">▶️ تشغيل</button>
+        </form>
+        <form class="inline-form" method="post" action="{{ url_for('bot_control', action='stop') }}">
+            <button class="btn btn-red" id="btnStop">⏹ إيقاف</button>
+        </form>
+        <form class="inline-form" method="post" action="{{ url_for('bot_control', action='restart') }}">
+            <button class="btn btn-orange" id="btnRestart">🔄 إعادة تشغيل</button>
+        </form>
+    </div>
+    <p class="muted" style="margin-top:10px; font-size:.85rem;">
+        💡 بعد تعديل الإعدادات، اضغط «إعادة تشغيل» لتطبيقها على البوت.
+        مسار بايثون الحالي: <code>{{ auth.python_path }}</code>
+    </p>
+</div>
+
+<!-- سجل البوت -->
+<div class="card">
+    <h2>📜 سجل التشغيل <span class="muted" style="font-size:.75rem;">(حيّ)</span></h2>
+    <div class="log-box" id="logBox">{{ log }}</div>
+</div>
+
+<!-- الرسوم البيانية -->
+<h2>📊 الإحصائيات المرئية</h2>
+<div class="chart-cols">
+    <!-- المشاركات عبر الزمن -->
+    <div class="card">
+        <h2>📈 المشاركات (آخر 14 يوماً)</h2>
+        {% if participation %}
+        <div class="bar-chart">
+            {% for row in participation %}
+            <div class="bar-col" title="{{ row.day }}: {{ row.n }}">
+                <span class="bar-val">{{ row.n }}</span>
+                <div class="bar" style="height: {{ (row.n / max_part * 100) | round(0, 'floor') }}%"></div>
+                <span class="bar-label">{{ row.day[5:] }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted">لا توجد مشاركات بعد.</p>
+        {% endif %}
+    </div>
+
+    <!-- أداء المقررات -->
+    <div class="card">
+        <h2>🎯 متوسط أداء المقررات (%)</h2>
+        {% if subj_perf %}
+        {% for row in subj_perf %}
+        <div class="hbar-row">
+            <div class="hbar-name" title="{{ row.subject_name }}">{{ row.subject_name }}</div>
+            <div class="hbar-track">
+                <div class="hbar-fill blue" style="width: {{ row.avg_pct }}%">{{ row.avg_pct }}%</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="muted">لا توجد نتائج مقررات بعد.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- أكثر الطلاب نشاطاً -->
+<div class="card">
+    <h2>🏅 أكثر الطلاب نشاطاً</h2>
+    {% if top_students %}
+    {% for row in top_students %}
+    <div class="hbar-row">
+        <div class="hbar-name" title="{{ row.full_name }}">{{ loop.index }}. {{ row.full_name }}</div>
+        <div class="hbar-track">
+            <div class="hbar-fill" style="width: {{ (row.participations / max_active * 100) | round(0, 'floor') }}%">
+                {{ row.participations }} مشاركة
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="muted">لا توجد مشاركات بعد.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// تحديث حالة البوت والسجل حيّاً كل 5 ثوانٍ
+var PSUTIL_OK = {{ 'true' if psutil_ok else 'false' }};
+
+function renderStatus(running) {
+    var badge = document.getElementById('botStatusBadge');
+    badge.innerHTML = running
+        ? '<span class="badge badge-green">🟢 يعمل</span>'
+        : '<span class="badge badge-red">🔴 متوقف</span>';
+    document.getElementById('btnStart').disabled = running || !PSUTIL_OK;
+    document.getElementById('btnStop').disabled = !running || !PSUTIL_OK;
+    document.getElementById('btnRestart').disabled = !PSUTIL_OK;
+}
+
+function refreshStatus() {
+    fetch('{{ url_for("api_status") }}')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+            renderStatus(d.running);
+            var box = document.getElementById('logBox');
+            var atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+            box.textContent = d.log;
+            if (atBottom) { box.scrollTop = box.scrollHeight; }
+        })
+        .catch(function () { /* تجاهل أخطاء الشبكة المؤقتة */ });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var box = document.getElementById('logBox');
+    box.scrollTop = box.scrollHeight;
+    refreshStatus();
+    setInterval(refreshStatus, 5000);
+});
+</script>
+{% endblock %}

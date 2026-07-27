@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}التعليمات{% endblock %}
+{% block content %}
+<h1>📖 التعليمات والروابط</h1>
+<p class="subtitle">دليل استخدام لوحة التحكم وإدارة البوت خطوة بخطوة</p>
+
+<div class="card">
+    <h2>🔗 الروابط المهمة</h2>
+    <div class="table-wrap">
+    <table class="link-table">
+        <thead><tr><th>الأداة</th><th>الاستخدام</th><th>الرابط</th></tr></thead>
+        <tbody>
+        <tr>
+            <td><strong>BotFather</strong></td>
+            <td>إنشاء البوت والحصول على التوكن / إعادة توليده عند التسريب</td>
+            <td><a class="link" href="https://t.me/BotFather" target="_blank" dir="ltr">t.me/BotFather</a></td>
+        </tr>
+        <tr>
+            <td><strong>userinfobot</strong></td>
+            <td>معرفة المعرف الرقمي (ID) لأي مستخدم — للمشرفين والمدرسين واللجنة</td>
+            <td><a class="link" href="https://t.me/userinfobot" target="_blank" dir="ltr">t.me/userinfobot</a></td>
+        </tr>
+        <tr>
+            <td><strong>Python</strong></td>
+            <td>لغة تشغيل البوت</td>
+            <td><a class="link" href="https://www.python.org/downloads" target="_blank" dir="ltr">python.org/downloads</a></td>
+        </tr>
+        <tr>
+            <td><strong>GitHub Tokens</strong></td>
+            <td>توكن رفع الكود (صلاحية Contents: Read and write)</td>
+            <td><a class="link" href="https://github.com/settings/personal-access-tokens" target="_blank" dir="ltr">github.com/settings/…</a></td>
+        </tr>
+        <tr>
+            <td><strong>مستودع البوت</strong></td>
+            <td>كود المشروع على GitHub</td>
+            <td><a class="link" href="https://github.com/hazeemcs/Telegram_bot" target="_blank" dir="ltr">hazeemcs/Telegram_bot</a></td>
+        </tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="card">
+    <h2>🚀 خطوات إعداد البوت من هذه اللوحة</h2>
+    <ol class="steps">
+        <li><strong>أدخل التوكن:</strong> اذهب إلى «⚙️ إعدادات البوت» وألصق توكن البوت من BotFather، ثم احفظ.</li>
+        <li><strong>عيّن المشرفين:</strong> في نفس الصفحة، أضف معرفك الرقمي (من userinfobot) في خانة «المعرفات الرقمية».</li>
+        <li><strong>أضف المقررات:</strong> من صفحة «📚 المقررات» أضف المواد الدراسية.</li>
+        <li><strong>أضف المدرسين:</strong> من «👨‍🏫 المدرسون» بمعرفاتهم، ثم اربط كل مدرس بمقرراته.</li>
+        <li><strong>أضف اللجنة:</strong> من «🧑‍⚖️ لجنة المسابقات».</li>
+        <li><strong>شغّل البوت:</strong> عُد إلى «🏠 لوحة التحكم» واضغط «▶️ تشغيل».</li>
+        <li><strong>الطلاب يسجلون أنفسهم</strong> عبر البوت في تيليجرام بأمر <code>/start</code>.</li>
+    </ol>
+</div>
+
+<div class="card">
+    <h2>🎛 تطبيق التعديلات على البوت</h2>
+    <ul class="checklist">
+        <li>✅ تعديلات <strong>المقررات، المدرسين، اللجنة، الطلاب، المسابقات</strong> تُطبَّق فوراً (تُحفظ في قاعدة البيانات مباشرة).</li>
+        <li>🔄 تعديلات <strong>إعدادات البوت</strong> (التوكن، الاسم، المشرفون، إعدادات المسابقات) تتطلب الضغط على «🔄 إعادة تشغيل» في لوحة التحكم لتُطبَّق.</li>
+    </ul>
+</div>
+
+<div class="card">
+    <h2>🔐 الأمن والحماية</h2>
+    <div class="alert alert-warn">
+        ⚠️ هذه اللوحة تتحكم بالبوت بالكامل وتحتوي التوكن — لا تفتحها على شبكة عامة.
+        هي تعمل على <code>127.0.0.1</code> فقط (جهازك المحلي) بشكل افتراضي.
+    </div>
+    <ul class="checklist">
+        <li>🔑 عند تسريب توكن البوت: افتح BotFather ← <code>/mybots</code> ← بوتك ← API Token ← <strong>Revoke</strong>، ثم ضع الجديد في «إعدادات البوت».</li>
+        <li>🗝 غيّر كلمة مرور اللوحة دورياً من «إعدادات البوت» ← «إعدادات لوحة التحكم».</li>
+        <li>💾 ملفات <code>config.json</code> و <code>panel_auth.json</code> و <code>*.db</code> محمية من الرفع إلى GitHub عبر <code>.gitignore</code>.</li>
+    </ul>
+</div>
+{% endblock %}

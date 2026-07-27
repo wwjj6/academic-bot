@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}المدرسون{% endblock %}
+{% block content %}
+<h1>👨‍🏫 إدارة المدرسين</h1>
+<p class="subtitle">إضافة المدرسين وربطهم بمقرراتهم</p>
+
+<div class="card">
+    <h2>➕ إضافة مدرس</h2>
+    <form method="post" action="{{ url_for('professors_add') }}">
+        <div class="form-grid">
+            <div class="form-row">
+                <label>معرف تيليجرام الرقمي *
+                    <span class="hint">— من @userinfobot</span>
+                </label>
+                <input type="text" name="user_id" required dir="ltr" placeholder="123456789">
+            </div>
+            <div class="form-row">
+                <label>اسم المدرس *</label>
+                <input type="text" name="full_name" required placeholder="د. أحمد محمد">
+            </div>
+        </div>
+        <div class="form-row">
+            <label>اسم المستخدم <span class="hint">(اختياري، بدون @)</span></label>
+            <input type="text" name="username" dir="ltr" placeholder="username">
+        </div>
+        <button type="submit" class="btn btn-primary">إضافة المدرس</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>قائمة المدرسين ({{ professors|length }})</h2>
+    {% if professors %}
+        {% for p in professors %}
+        <div class="card" style="background:#fafbfc;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <strong>{{ p.full_name }}</strong>
+                    <span class="muted" dir="ltr">(ID: {{ p.user_id }})</span>
+                    {% if p.username %}<span class="badge badge-blue" dir="ltr">@{{ p.username }}</span>{% endif %}
+                </div>
+                <form method="post" action="{{ url_for('professors_delete', uid=p.user_id) }}"
+                      onsubmit="return confirm('إزالة المدرس «{{ p.full_name }}»؟');">
+                    <button class="btn btn-red btn-sm">🗑 إزالة</button>
+                </form>
+            </div>
+            <div style="margin-top:8px;">
+                {% if p.subjects %}
+                    {% for s in p.subjects %}<span class="badge badge-green">{{ s.name }}</span> {% endfor %}
+                {% else %}
+                    <span class="badge badge-orange">لا مقررات معينة</span>
+                {% endif %}
+            </div>
+            <details>
+                <summary>🔗 تعيين المقررات</summary>
+                <form method="post" action="{{ url_for('professors_set_subjects', uid=p.user_id) }}">
+                    {% set assigned = p.subjects | map(attribute='subject_id') | list %}
+                    <div class="subject-checks">
+                    {% for s in all_subjects %}
+                        <label>
+                            <input type="checkbox" name="subject_ids" value="{{ s.subject_id }}"
+                                   {{ 'checked' if s.subject_id in assigned }}>
+                            {{ s.name }}
+                        </label>
+                    {% endfor %}
+                    </div>
+                    {% if all_subjects %}
+                    <button class="btn btn-green btn-sm">حفظ المقررات</button>
+                    {% else %}
+                    <p class="muted">لا توجد مقررات. أضف مقررات أولاً من صفحة المقررات.</p>
+                    {% endif %}
+                </form>
+            </details>
+        </div>
+        {% endfor %}
+    {% else %}
+    <p class="muted">لا يوجد مدرسون بعد.</p>
+    {% endif %}
+</div>
+{% endblock %}

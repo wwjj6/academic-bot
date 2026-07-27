@@ -229,5 +229,10 @@ config.json
 *.db
 *.sqlite3
 
+# لوحة التحكم: كلمة المرور ومفتاح الجلسة وسجل التشغيل
+admin_panel/panel_auth.json
+bot_run.log
+config.json.bak
+
 # نسخة محلية من ملفات الرفع
 github__Ubploaded_files/

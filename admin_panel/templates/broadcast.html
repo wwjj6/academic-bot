@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}إشعار جماعي{% endblock %}
+{% block content %}
+<h1>📢 إرسال إشعار جماعي</h1>
+<p class="subtitle">أرسل رسالة نصية لجميع الطلاب أو لطلاب مقرر محدد عبر البوت</p>
+
+{% if not token_ok %}
+<div class="alert alert-warn">
+    ⚠️ توكن البوت غير مضبوط. اضبطه في <a href="{{ url_for('settings') }}">إعدادات البوت</a> أولاً.
+</div>
+{% endif %}
+
+<div class="card">
+    <form method="post">
+        <div class="form-row">
+            <label>المستهدفون</label>
+            <select name="target">
+                <option value="all">🌐 جميع الطلاب</option>
+                {% for s in subjects %}
+                <option value="{{ s.subject_id }}">📚 طلاب مقرر: {{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-row">
+            <label>نص الإشعار</label>
+            <textarea name="message" rows="5" required
+                      placeholder="اكتب نص الرسالة التي ستصل الطلاب في تيليجرام..."></textarea>
+        </div>
+        <div class="alert alert-info">
+            ℹ️ يُرسَل الإشعار مباشرة عبر تيليجرام. الطلاب الذين لم يبدؤوا محادثة البوت
+            (لم يرسلوا <code>/start</code>) لن يصلهم الإشعار — وهذا قيد من تيليجرام نفسه.
+        </div>
+        <button type="submit" class="btn btn-primary" {{ 'disabled' if not token_ok }}>📤 إرسال الإشعار</button>
+    </form>
+</div>
+{% endblock %}

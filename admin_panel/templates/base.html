@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}لوحة تحكم البوت{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% if session.get('logged_in') %}
+<button class="menu-toggle" onclick="toggleSidebar()" aria-label="القائمة">☰</button>
+<div class="overlay" onclick="toggleSidebar()"></div>
+<div class="layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            <span class="brand-icon">🏥</span>
+            <span class="brand-text">لوحة تحكم البوت</span>
+        </div>
+        <nav>
+            <a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' }}">🏠 لوحة التحكم</a>
+            <a href="{{ url_for('settings') }}" class="{{ 'active' if request.endpoint == 'settings' }}">⚙️ إعدادات البوت</a>
+            <a href="{{ url_for('subjects') }}" class="{{ 'active' if request.endpoint == 'subjects' }}">📚 المقررات</a>
+            <a href="{{ url_for('professors') }}" class="{{ 'active' if request.endpoint == 'professors' }}">👨‍🏫 المدرسون</a>
+            <a href="{{ url_for('committee') }}" class="{{ 'active' if request.endpoint == 'committee' }}">🧑‍⚖️ لجنة المسابقات</a>
+            <a href="{{ url_for('students') }}" class="{{ 'active' if request.endpoint == 'students' }}">🎓 الطلاب</a>
+            <a href="{{ url_for('competitions') }}" class="{{ 'active' if request.endpoint in ['competitions', 'competitions_new', 'competitions_edit'] }}">🏆 المسابقات</a>
+            <a href="{{ url_for('broadcast') }}" class="{{ 'active' if request.endpoint == 'broadcast' }}">📢 إشعار جماعي</a>
+            <a href="{{ url_for('instructions') }}" class="{{ 'active' if request.endpoint == 'instructions' }}">📖 التعليمات</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="bot-badge {{ 'on' if bot_running else 'off' }}">
+                {{ '🟢 البوت يعمل' if bot_running else '🔴 البوت متوقف' }}
+            </div>
+            <a href="{{ url_for('logout') }}" class="logout-link">🚪 تسجيل الخروج</a>
+        </div>
+    </aside>
+
+    <main class="content">
+        <div class="flash-area">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+        </div>
+        {% block content %}{% endblock %}
+    </main>
+</div>
+{% else %}
+    <div class="auth-wrap">
+        <div class="flash-area">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+        </div>
+        {% block auth_content %}{% endblock %}
+    </div>
+{% endif %}
+
+<script>
+// حقن رمز الحماية (CSRF) تلقائياً في كل نماذج POST
+document.addEventListener('DOMContentLoaded', function () {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    var token = meta ? meta.getAttribute('content') : '';
+    document.querySelectorAll('form').forEach(function (form) {
+        if ((form.getAttribute('method') || '').toLowerCase() === 'post'
+                && !form.querySelector('input[name="csrf_token"]')) {
+            var inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = 'csrf_token'; inp.value = token;
+            form.appendChild(inp);
+        }
+    });
+});
+// طيّ/فتح القائمة الجانبية على الجوال
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.querySelector('.overlay').classList.toggle('show');
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

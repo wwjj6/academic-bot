@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}إعدادات البوت{% endblock %}
+{% block content %}
+<h1>⚙️ إعدادات البوت</h1>
+<p class="subtitle">جميع القيم الحالية معروضة كافتراضية — عدّل ما تشاء ثم احفظ</p>
+
+<div class="alert alert-info">
+    ℹ️ بعد الحفظ، اذهب إلى <a href="{{ url_for('dashboard') }}">لوحة التحكم</a> واضغط
+    «🔄 إعادة تشغيل» لتطبيق التغييرات على البوت الفعلي.
+</div>
+
+<!-- إعدادات البوت الأساسية -->
+<form method="post">
+<input type="hidden" name="form_type" value="bot_config">
+<div class="card">
+    <h2>🤖 الإعدادات الأساسية</h2>
+
+    <div class="form-row">
+        <label>توكن البوت (Bot Token)
+            <span class="hint">— من BotFather. اتركه فارغاً للإبقاء على الحالي</span>
+        </label>
+        <div style="display:flex; gap:8px; align-items:stretch;">
+            <input type="text" name="bot_token" id="bot_token" dir="ltr" style="flex:1;"
+                   placeholder="{{ '•••••••••• (محفوظ حالياً)' if cfg.bot_token else 'أدخل التوكن هنا' }}">
+            <button type="button" class="btn btn-gray" id="verifyBtn" onclick="verifyToken()">🔍 تحقّق</button>
+        </div>
+        <p class="muted" style="font-size:.82rem; margin-top:4px;">
+            الحالي: {% if cfg.bot_token %}<code>{{ cfg.bot_token[:10] }}…{{ cfg.bot_token[-4:] }}</code>{% else %}<span class="badge badge-red">غير مضبوط</span>{% endif %}
+        </p>
+        <div id="verifyResult" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="form-row">
+        <label>اسم البوت (يظهر في الرسائل)</label>
+        <input type="text" name="bot_name" value="{{ cfg.bot_name }}">
+    </div>
+
+    <div class="form-grid">
+        <div class="form-row">
+            <label>المنطقة الزمنية</label>
+            <input type="text" name="timezone" value="{{ cfg.timezone }}" dir="ltr">
+        </div>
+        <div class="form-row">
+            <label>مسار قاعدة البيانات</label>
+            <input type="text" name="database_path" value="{{ cfg.database_path }}" dir="ltr">
+        </div>
+    </div>
+</div>
+
+<!-- المشرفون -->
+<div class="card">
+    <h2>👑 المشرفون العامون</h2>
+    <div class="form-row">
+        <label>المعرفات الرقمية (admin_ids)
+            <span class="hint">— أرقام مفصولة بفواصل أو أسطر. الأكثر أماناً</span>
+        </label>
+        <textarea name="admin_ids" dir="ltr" placeholder="123456789, 987654321">{{ cfg.admin_ids | join(', ') }}</textarea>
+    </div>
+    <div class="form-row">
+        <label>أسماء المستخدمين (admin_usernames)
+            <span class="hint">— بدون @، تُمنح صلاحية المشرف عند أول /start</span>
+        </label>
+        <textarea name="admin_usernames" dir="ltr" placeholder="username1, username2">{{ cfg.admin_usernames | join(', ') }}</textarea>
+    </div>
+</div>
+
+<!-- إعدادات المسابقات -->
+<div class="card">
+    <h2>🏆 إعدادات المسابقات</h2>
+    <div class="form-grid">
+        <div class="form-row">
+            <label>أقل عدد أسئلة</label>
+            <input type="number" name="min_questions" value="{{ cfg.min_questions }}" min="1">
+        </div>
+        <div class="form-row">
+            <label>أكثر عدد أسئلة</label>
+            <input type="number" name="max_questions" value="{{ cfg.max_questions }}" min="1">
+        </div>
+        <div class="form-row">
+            <label>مدة السؤال الافتراضية (ثانية)</label>
+            <input type="number" name="default_question_seconds" value="{{ cfg.default_question_seconds }}" min="5">
+        </div>
+        <div class="form-row">
+            <label>عدد المراكز في لوحة الترتيب</label>
+            <input type="number" name="top_n_leaderboard" value="{{ cfg.top_n_leaderboard }}" min="1">
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">💾 حفظ إعدادات البوت</button>
+</div>
+</form>
+
+<!-- إعدادات اللوحة -->
+<form method="post">
+<input type="hidden" name="form_type" value="panel_settings">
+<div class="card">
+    <h2>🔧 إعدادات لوحة التحكم</h2>
+    <div class="form-row">
+        <label>مسار بايثون لتشغيل البوت
+            <span class="hint">— pythonw.exe يعمل بلا نافذة</span>
+        </label>
+        <input type="text" name="python_path" value="{{ auth.python_path }}" dir="ltr">
+    </div>
+    <div class="form-row">
+        <label>تغيير كلمة مرور اللوحة
+            <span class="hint">— اتركها فارغة للإبقاء على الحالية</span>
+        </label>
+        <input type="password" name="new_password" placeholder="كلمة مرور جديدة (6 أحرف على الأقل)">
+    </div>
+    <button type="submit" class="btn btn-gray">💾 حفظ إعدادات اللوحة</button>
+</div>
+</form>
+
+<script>
+function verifyToken() {
+    var btn = document.getElementById('verifyBtn');
+    var box = document.getElementById('verifyResult');
+    var token = document.getElementById('bot_token').value.trim();
+    btn.disabled = true;
+    box.innerHTML = '<span class="muted">⏳ جارٍ التحقق من تيليجرام...</span>';
+    var body = new URLSearchParams();
+    if (token) body.append('token', token);
+    var csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    fetch('{{ url_for("verify_token") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrf
+        },
+        body: body.toString()
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        if (d.ok) {
+            box.innerHTML = '<div class="alert alert-ok">✅ التوكن صحيح — البوت: <strong>'
+                + (d.name || '') + '</strong> '
+                + (d.username ? '(@' + d.username + ')' : '')
+                + ' — <span dir="ltr">ID: ' + d.id + '</span></div>';
+        } else {
+            box.innerHTML = '<div class="alert alert-warn">❌ ' + (d.error || 'توكن غير صالح') + '</div>';
+        }
+    })
+    .catch(function(){
+        box.innerHTML = '<div class="alert alert-warn">❌ تعذّر الاتصال بتيليجرام. تحقق من الإنترنت.</div>';
+    })
+    .finally(function(){ btn.disabled = false; });
+}
+</script>
+{% endblock %}

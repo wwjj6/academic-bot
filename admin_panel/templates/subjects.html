@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}المقررات{% endblock %}
+{% block content %}
+<h1>📚 إدارة المقررات</h1>
+<p class="subtitle">إضافة وتعديل وحذف المقررات الدراسية</p>
+
+<div class="card">
+    <h2>➕ إضافة مقرر جديد</h2>
+    <form method="post" action="{{ url_for('subjects_add') }}">
+        <div class="form-grid">
+            <div class="form-row">
+                <label>اسم المقرر *</label>
+                <input type="text" name="name" required placeholder="مثال: التشريح">
+            </div>
+            <div class="form-row">
+                <label>الرمز <span class="hint">(اختياري)</span></label>
+                <input type="text" name="code" placeholder="ANA101">
+            </div>
+        </div>
+        <div class="form-row">
+            <label>المستوى <span class="hint">(اختياري)</span></label>
+            <input type="text" name="level" placeholder="المستوى الثاني">
+        </div>
+        <button type="submit" class="btn btn-primary">إضافة المقرر</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>📥 استيراد جماعي (CSV)</h2>
+    <p class="muted" style="font-size:.9rem;">
+        ارفع ملف CSV، كل سطر مقرر بالترتيب: <code>الاسم,الرمز,المستوى</code>
+        (الرمز والمستوى اختياريان). يمكن فتح الملف وتعبئته من Excel.
+    </p>
+    <form method="post" action="{{ url_for('subjects_import') }}" enctype="multipart/form-data"
+          style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <input type="file" name="file" accept=".csv,text/csv" required>
+        <button type="submit" class="btn btn-green">استيراد المقررات</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>قائمة المقررات ({{ subjects|length }})</h2>
+    {% if subjects %}
+    <div class="table-wrap">
+    <table>
+        <thead><tr><th>الاسم</th><th>الرمز</th><th>المستوى</th><th>إجراءات</th></tr></thead>
+        <tbody>
+        {% for s in subjects %}
+        <tr>
+            <td><strong>{{ s.name }}</strong></td>
+            <td>{{ s.code or '—' }}</td>
+            <td>{{ s.level or '—' }}</td>
+            <td>
+                <a href="{{ url_for('subjects_results_export', sid=s.subject_id) }}" class="btn btn-green btn-sm">⬇️ نتائج المقرر</a>
+                <details>
+                    <summary>✏️ تعديل</summary>
+                    <form method="post" action="{{ url_for('subjects_edit', sid=s.subject_id) }}" style="margin-top:8px;">
+                        <div class="form-grid">
+                            <input type="text" name="name" value="{{ s.name }}" required>
+                            <input type="text" name="code" value="{{ s.code or '' }}" placeholder="الرمز">
+                        </div>
+                        <input type="text" name="level" value="{{ s.level or '' }}" placeholder="المستوى" style="margin-top:8px;">
+                        <div style="margin-top:8px; display:flex; gap:8px;">
+                            <button type="submit" class="btn btn-green btn-sm">حفظ</button>
+                        </div>
+                    </form>
+                    <form method="post" action="{{ url_for('subjects_delete', sid=s.subject_id) }}"
+                          onsubmit="return confirm('حذف المقرر «{{ s.name }}»؟ سيؤثر على المسابقات والتسجيلات المرتبطة.');"
+                          style="margin-top:8px;">
+                        <button type="submit" class="btn btn-red btn-sm">🗑 حذف المقرر</button>
+                    </form>
+                </details>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="muted">لا توجد مقررات بعد. أضف أول مقرر من الأعلى.</p>
+    {% endif %}
+</div>
+{% endblock %}

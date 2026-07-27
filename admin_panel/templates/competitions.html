@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}المسابقات{% endblock %}
+{% block content %}
+<h1>🏆 إدارة المسابقات</h1>
+<p class="subtitle">إنشاء وتعديل المسابقات والأسئلة، وتغيير الحالة والحذف</p>
+
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <form method="get" style="display:flex; gap:8px; flex:1; max-width:420px;">
+            <input type="text" name="q" value="{{ q }}" placeholder="ابحث بعنوان المسابقة أو المقرر...">
+            <button class="btn btn-gray btn-sm">🔍 بحث</button>
+            {% if q %}<a href="{{ url_for('competitions') }}" class="btn btn-gray btn-sm">إلغاء</a>{% endif %}
+        </form>
+        <a href="{{ url_for('competitions_new') }}" class="btn btn-primary">➕ مسابقة جديدة</a>
+    </div>
+</div>
+
+<div class="card">
+    <h2>جميع المسابقات ({{ total }})</h2>
+    {% if competitions %}
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>العنوان</th><th>المقرر</th><th>النوع</th><th>المنشئ</th>
+                <th>الأسئلة</th><th>المشاركات</th><th>البدء ← الانتهاء</th>
+                <th>الحالة</th><th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for c in competitions %}
+        <tr>
+            <td><strong>{{ c.title }}</strong></td>
+            <td>{{ c.subject_name or 'عامة' }}</td>
+            <td>{{ type_labels.get(c.comp_type, c.comp_type) }}</td>
+            <td>{{ c.creator_name or '—' }}</td>
+            <td>{{ c.questions_count }}/{{ c.num_questions }}</td>
+            <td>{{ c.results_count }}</td>
+            <td style="font-size:.82rem;" dir="ltr">{{ c.start_time }}<br>← {{ c.end_time }}</td>
+            <td>
+                {% set st = c.status %}
+                <span class="badge
+                    {%- if st == 'active' %} badge-green
+                    {%- elif st == 'closed' %} badge-gray
+                    {%- elif st == 'rejected' %} badge-red
+                    {%- elif st == 'pending_review' %} badge-orange
+                    {%- else %} badge-blue{% endif %}">
+                    {{ status_labels.get(st, st) }}
+                </span>
+            </td>
+            <td>
+                <details>
+                    <summary>إدارة</summary>
+                    <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+                        <a href="{{ url_for('competitions_edit', cid=c.competition_id) }}" class="btn btn-primary btn-sm">✏️ تعديل والأسئلة</a>
+                        <a href="{{ url_for('competitions_results', cid=c.competition_id) }}" class="btn btn-gray btn-sm">📊 النتائج</a>
+                    </div>
+                    <form method="post" action="{{ url_for('competitions_status', cid=c.competition_id) }}"
+                          style="margin-top:8px; display:flex; gap:6px;">
+                        <select name="status">
+                            {% for key, label in status_labels.items() %}
+                            <option value="{{ key }}" {{ 'selected' if c.status == key }}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-green btn-sm">تغيير</button>
+                    </form>
+                    <form method="post" action="{{ url_for('competitions_delete', cid=c.competition_id) }}"
+                          onsubmit="return confirm('حذف المسابقة «{{ c.title }}» وكل أسئلتها ونتائجها؟');"
+                          style="margin-top:8px;">
+                        <button class="btn btn-red btn-sm">🗑 حذف المسابقة</button>
+                    </form>
+                </details>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% if pages > 1 %}
+    <div class="pagination">
+        {% for p in range(1, pages + 1) %}
+            <a href="{{ url_for('competitions', page=p, q=q) }}"
+               class="page-link {{ 'active' if p == page }}">{{ p }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="muted">{{ 'لا توجد نتائج للبحث.' if q else 'لا توجد مسابقات بعد. أنشئ واحدة من زر «مسابقة جديدة».' }}</p>
+    {% endif %}
+</div>
+{% endblock %}

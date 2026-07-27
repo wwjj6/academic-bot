@@ -496,3 +496,161 @@ def get_stats():
         stats["results"] = conn.execute(
             "SELECT COUNT(*) AS n FROM Results").fetchone()["n"]
         return stats
+
+
+# =====================================================================
+#  دوال إضافية للوحة التحكم (Admin Panel)
+# =====================================================================
+
+def get_all_users():
+    with get_conn() as conn:
+        return conn.execute(
+            "SELECT * FROM Users ORDER BY role, full_name").fetchall()
+
+
+def delete_user(user_id):
+    with get_conn() as conn:
+        conn.execute("DELETE FROM Users WHERE user_id=?", (user_id,))
+
+
+def add_or_update_committee(user_id, full_name, username=None):
+    """إضافة/تحديث عضو لجنة."""
+    upsert_user(user_id, full_name, username, role="committee")
+
+
+def update_subject(subject_id, name, code=None, level=None):
+    with get_conn() as conn:
+        conn.execute("UPDATE Subjects SET name=?, code=?, level=? WHERE subject_id=?",
+                     (name, code, level, subject_id))
+
+
+def delete_subject(subject_id):
+    with get_conn() as conn:
+        conn.execute("DELETE FROM Subjects WHERE subject_id=?", (subject_id,))
+
+
+def get_professor_subject_ids(user_id):
+    """معرفات مقررات المدرس (حسب user_id) — لعرض حالة التعيين."""
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT ps.subject_id FROM Professor_Subjects ps
+            JOIN Professors p ON p.professor_id = ps.professor_id
+            WHERE p.user_id = ?""", (user_id,)).fetchall()
+        return {r["subject_id"] for r in rows}
+
+
+def set_professor_subjects(user_id, subject_ids):
+    """ضبط مقررات المدرس دفعة واحدة (استبدال كامل)."""
+    prof = get_professor_by_user(user_id)
+    if not prof:
+        return
+    pid = prof["professor_id"]
+    with get_conn() as conn:
+        conn.execute("DELETE FROM Professor_Subjects WHERE professor_id=?", (pid,))
+        for sid in subject_ids:
+            conn.execute(
+                "INSERT OR IGNORE INTO Professor_Subjects (professor_id, subject_id) VALUES (?,?)",
+                (pid, sid))
+
+
+def get_all_competitions():
+    with get_conn() as conn:
+        return conn.execute("""
+            SELECT c.*, s.name AS subject_name, u.full_name AS creator_name
+            FROM Competitions c
+            LEFT JOIN Subjects s ON s.subject_id = c.subject_id
+            LEFT JOIN Users u ON u.user_id = c.creator_id
+            ORDER BY c.created_at DESC""").fetchall()
+
+
+def delete_competition(competition_id):
+    with get_conn() as conn:
+        conn.execute("DELETE FROM Competitions WHERE competition_id=?", (competition_id,))
+
+
+def get_student_subject_ids(user_id):
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT subject_id FROM Student_Subjects WHERE user_id=?", (user_id,)).fetchall()
+        return {r["subject_id"] for r in rows}
+
+
+def set_student_subjects(user_id, subject_ids):
+    with get_conn() as conn:
+        conn.execute("DELETE FROM Student_Subjects WHERE user_id=?", (user_id,))
+        for sid in subject_ids:
+            conn.execute(
+                "INSERT OR IGNORE INTO Student_Subjects (user_id, subject_id) VALUES (?,?)",
+                (user_id, sid))
+
+
+def update_competition(competition_id, title, subject_id, comp_type, num_questions,
+                       question_seconds, start_time, end_time):
+    with get_conn() as conn:
+        conn.execute("""
+            UPDATE Competitions SET title=?, subject_id=?, comp_type=?, num_questions=?,
+                   question_seconds=?, start_time=?, end_time=?
+            WHERE competition_id=?""",
+            (title, subject_id, comp_type, num_questions, question_seconds,
+             start_time, end_time, competition_id))
+
+
+def get_question(question_id):
+    with get_conn() as conn:
+        return conn.execute("SELECT * FROM Questions WHERE question_id=?",
+                            (question_id,)).fetchone()
+
+
+def update_question(question_id, text, a, b, c, d, correct):
+    with get_conn() as conn:
+        conn.execute("""
+            UPDATE Questions SET text=?, option_a=?, option_b=?, option_c=?,
+                   option_d=?, correct_option=? WHERE question_id=?""",
+            (text, a, b, c, d, correct, question_id))
+
+
+def delete_question(question_id):
+    with get_conn() as conn:
+        conn.execute("DELETE FROM Questions WHERE question_id=?", (question_id,))
+
+
+# --- بيانات الرسوم البيانية للوحة التحكم ---
+
+def get_participation_by_day(days=14):
+    """عدد المشاركات المكتملة لكل يوم (آخر N يوم)."""
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT date(finished_at) AS day, COUNT(*) AS n
+            FROM Results
+            GROUP BY date(finished_at)
+            ORDER BY day DESC LIMIT ?""", (days,)).fetchall()
+        return list(reversed(rows))
+
+
+def get_subject_performance():
+    """متوسط نسبة النجاح وعدد المحاولات لكل مقرر."""
+    with get_conn() as conn:
+        return conn.execute("""
+            SELECT s.name AS subject_name,
+                   COUNT(r.result_id) AS attempts,
+                   ROUND(AVG(r.score * 100.0 / r.total), 1) AS avg_pct
+            FROM Results r
+            JOIN Competitions c ON c.competition_id = r.competition_id
+            JOIN Subjects s ON s.subject_id = c.subject_id
+            WHERE r.total > 0
+            GROUP BY s.subject_id
+            ORDER BY avg_pct DESC""").fetchall()
+
+
+def get_top_active_students(limit=10):
+    """أكثر الطلاب مشاركةً (عدد المسابقات المكتملة)."""
+    with get_conn() as conn:
+        return conn.execute("""
+            SELECT u.full_name,
+                   COUNT(r.result_id) AS participations,
+                   SUM(r.score) AS total_score
+            FROM Results r
+            JOIN Users u ON u.user_id = r.user_id
+            GROUP BY r.user_id
+            ORDER BY participations DESC, total_score DESC
+            LIMIT ?""", (limit,)).fetchall()
