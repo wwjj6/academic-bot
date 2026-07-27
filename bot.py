@@ -9,6 +9,7 @@
 """
 import logging
 import sys
+import asyncio  # <--- تمت الإضافة
 
 from telegram import BotCommand
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
@@ -97,7 +98,16 @@ def main():
                                            common.show_general_leaderboard))
 
     logger.info("🚀 بوت المسابقات الأكاديمية يعمل الآن...")
-    application.run_polling(drop_pending_updates=True)
+
+    # ========== إصلاح مشكلة Event Loop ==========
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        # لا يوجد حلقة تشغيل حالية → ننشئ واحدة جديدة
+        asyncio.run(application.run_polling(drop_pending_updates=True))
+    else:
+        # يوجد حلقة تشغيل → نستخدمها مباشرة
+        application.run_polling(drop_pending_updates=True)
 
 
 if __name__ == "__main__":
