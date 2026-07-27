@@ -97,7 +97,7 @@ def main():
     application.add_handler(MessageHandler(filters.Text([BTN_LEADERBOARD]),
                                            common.show_general_leaderboard))
 
-   logger.info("🚀 بوت المسابقات الأكاديمية يعمل الآن...")
+    logger.info("🚀 بوت المسابقات الأكاديمية يعمل الآن...")
 
 # ===== الحل النهائي لتشغيل البوت على Render =====
 import asyncio
